@@ -196,6 +196,32 @@ module "eks" {
   }
 }
 
+# ECR Repository for Frontend
+resource "aws_ecr_repository" "frontend" {
+  name                 = "frontend"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+# ECR Repository for Backend
+resource "aws_ecr_repository" "backend" {
+  name                 = "backend"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+
+
+output "backend_repository_url" {
+  value = aws_ecr_repository.backend.repository_url
+}
+
 # RDS Instance
 resource "aws_db_instance" "main" {
   identifier        = "${var.environment}-db"

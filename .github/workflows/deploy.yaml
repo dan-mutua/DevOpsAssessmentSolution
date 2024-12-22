@@ -30,16 +30,22 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/frontend:$IMAGE_TAG ./docker/frontend
+        # Build frontend image
+        docker build -t $ECR_REGISTRY/frontend:$IMAGE_TAG -f docker/frontend/Dockerfile ./frontend
+        # Push frontend image
         docker push $ECR_REGISTRY/frontend:$IMAGE_TAG
+        echo "::set-output name=frontend_image::$ECR_REGISTRY/frontend:$IMAGE_TAG"
 
     - name: Build and push Backend image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/backend:$IMAGE_TAG ./docker/backend
+        # Build backend image
+        docker build -t $ECR_REGISTRY/backend:$IMAGE_TAG -f docker/backend/Dockerfile ./backend
+        # Push backend image
         docker push $ECR_REGISTRY/backend:$IMAGE_TAG
+        echo "::set-output name=backend_image::$ECR_REGISTRY/backend:$IMAGE_TAG"
 
     - name: Update kube config
       run: aws eks update-kubeconfig --name production-cluster --region ${{ env.AWS_REGION }}
@@ -49,5 +55,10 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        envsubst < kubernetes/frontend.yaml | kubectl apply -f -
-        envsubst < kubernetes/backend.yaml | kubectl apply -f -
+        # Update image tags in Kubernetes manifests
+        sed -i "s|${ECR_REGISTRY}/frontend:.*|${ECR_REGISTRY}/frontend:${IMAGE_TAG}|" kubernetes/frontend.yaml
+        sed -i "s|${ECR_REGISTRY}/backend:.*|${ECR_REGISTRY}/backend:${IMAGE_TAG}|" kubernetes/backend.yaml
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f kubernetes/frontend.yaml
+        kubectl apply -f kubernetes/backend.yaml

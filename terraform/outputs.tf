@@ -22,3 +22,7 @@ output "db_connection_secret" {
   description = "SSM parameter path for database password"
   value       = aws_ssm_parameter.db_password.name
 }
+
+output "frontend_repository_url" {
+  value = aws_ecr_repository.frontend.repository_url
+}
