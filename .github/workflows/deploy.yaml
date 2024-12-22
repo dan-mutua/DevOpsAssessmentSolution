@@ -31,7 +31,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |
         # Build frontend image
-        docker build -t $ECR_REGISTRY/frontend:$IMAGE_TAG -f docker/frontend/Dockerfile ./frontend
+        docker build -t $ECR_REGISTRY/frontend:$IMAGE_TAG -f docker/frontend/Dockerfile docker/frontend
         # Push frontend image
         docker push $ECR_REGISTRY/frontend:$IMAGE_TAG
         echo "::set-output name=frontend_image::$ECR_REGISTRY/frontend:$IMAGE_TAG"
